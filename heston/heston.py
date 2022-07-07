@@ -55,29 +55,50 @@ def getMesh(Nu):
     hn = np.r_[h1, h2]
     return un, hn
     
-def getOptionPrice(S0, K, Nu, tau, r, k, sig, theta, rho, v):
-    un, hn = getMesh(Nu)
+def getOptionPrice(S0, K, Nu, tau, r, k, sig, theta, rho, v, isCall=True):
     
-    x = np.log(S0)
-    
-    phi      = getPhi(un, tau, r, k, sig, theta, rho, x, v)
-    phitilda = getPhiTilda(un, tau, r, k, sig, theta, rho, x, v)
+    if not isinstance(S0, np.ndarray):
+        S0 = np.asarray([S0])
+    if not isinstance(K, np.ndarray):
+        K = np.asarray([K])
 
+    S0 = S0.reshape(1, -1, 1)
+    K = K.reshape(-1, 1, 1)
+
+    Ns = S0.size
+    Nk = K.size
     
-    phi  = phi.reshape(1, -1)
-    phitilda = phitilda.reshape(1, -1)
+    un, hn = getMesh(Nu)
+
+    un = un.reshape(1, 1, Nu)
+    hn = hn.reshape(1, 1, Nu)
+    
+    xn = np.log(S0).reshape(1, Ns, 1)
+    
+    phi      = getPhi(un, tau, r, k, sig, theta, rho, xn, v)
+    phitilda = getPhiTilda(un, tau, r, k, sig, theta, rho, xn, v)
+
+    assert phi.shape == (1, Ns, Nu)
+    assert phitilda.shape == (1, Ns, Nu)
     
     F1 = np.exp(-1j * un * np.log(K)) * phi / (1j * un)
     F2 = np.exp(-1j * un * np.log(K)) * phitilda / (1j * un)
     
     F1 = F1.real * hn
     F2 = F2.real * hn
+    assert F1.shape == F2.shape == (Nk, Ns, Nu)
 
-    P1 = 0.5 + np.sum(F1, axis=1, keepdims=True) / np.pi
-    P2 = 0.5 + np.sum(F2, axis=1, keepdims=True) / np.pi
-    
-    res = S0 * P2 - np.exp(-r * tau) * K * P1
-    return res.reshape(-1)
+    I1 = np.sum(F1, axis=-1, keepdims=True) / np.pi
+    I2 = np.sum(F2, axis=-1, keepdims=True) / np.pi
+    if isCall:
+        P1 = 0.5 + I1
+        P2 = 0.5 + I2
+        res = S0 * P2 - np.exp(-r * tau) * K * P1
+    else:
+        P1 = 0.5 - I1
+        P2 = 0.5 - I2
+        res = np.exp(-r * tau) * K * P1 - S0 * P2
+    return res.reshape(Nk, Ns)
 
 
 def getOptionPriceFourierSeries(S0, K, Nu, tau, r, k, sig, theta, rho, v):

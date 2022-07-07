@@ -4,18 +4,28 @@ from numba import jit, njit
 
 from utils import *
 
-@njit
-def getRhs(v, hx, hy, xn, yn, r, sigma, kappa, theta, rho):
+#@njit
+def getRhs(v, xn, yn, r, sigma, kappa, theta, rho):
     sl = slice(1, -1, 1)
     ux, uy, uxx, uyy, uxy = np.zeros_like(v), np.zeros_like(v), np.zeros_like(v), np.zeros_like(v), np.zeros_like(v)
     #shoud replace with notunirofm grid
-    ux[sl, sl] = (v[2:, sl] - v[:-2, sl]) / (2.0 * hx)
-    uy[sl, sl] = (v[sl, 2:] - v[sl, :-2]) / (2.0 * hy)
+    h1 = xn[1:-1] - xn[:-2]
+    h2 = xn[2:] - xn[1:-1]
 
-    uxx[sl, sl] = (v[2:, sl] - 2 * v[1:-1, sl] + v[:-2, sl]) / (hx ** 2)
-    uyy[sl, sl] = (v[sl, 2:] - 2 * v[sl, 1:-1] + v[sl, :-2]) / (hy ** 2)
+    d1 = yn[1:-1] - yn[:-2]
+    d2 = yn[2:] - yn[1:-1]
 
-    uxy[sl, sl] = (v[2:, 2:] - v[:-2, 2:] - v[2:, :-2] + v[:-2, :-2]) / (4 * hx * hy)
+    h1 = h1.reshape(-1, 1)
+    h2 = h2.reshape(-1, 1)
+    d1 = d1.reshape(1, -1)
+    d2 = d2.reshape(1, -1)
+    ux[sl, sl] = ((h1 / h2) * (v[2:, sl] - v[1:-1, sl]) + (h2 / h1) * (v[1:-1, sl] - v[:-2, sl]) ) / (h1 + h2)
+    uy[sl, sl] = ((d1 / d2) * (v[sl, 2:] - v[sl, 1:-1]) + (d2 / d1) * (v[sl, 1:-1] - v[sl, :-2]) ) / (d1 + d2)
+
+    uxx[sl, sl] = ( (v[2:, sl] - v[1:-1, sl]) / h2 - (v[1:-1, sl] - v[:-2, sl]) / h1 ) / (h1 + h2)
+    uyy[sl, sl] = ( (v[sl, 2:] - v[sl, 1:-1]) / d2 - (v[sl, 1:-1] - v[sl, :-2]) / d1 ) / (d1 + d2)
+
+    uxy[sl, sl] = ( (h1 / h2) * (uy[2:, sl] - uy[1:-1, sl]) + (h2 / h1) * (uy[1:-1, sl] - uy[:-2, sl]) ) / (h1 + h2)
     f = (r - 0.5 * yn * sigma) * ux + \
         kappa * (theta - yn * sigma) / sigma * uy + \
         0.5 * sigma * yn * (uxx + uyy) + \
@@ -38,7 +48,7 @@ def solve_euler(hestonParams : HestonParams,
     sl = slice(1, -1, 1)
     
     for t in range(gridParams.M):
-        f = getRhs(u[t], hx, hy, xn, yn, r, sigma, kappa, theta, rho)
+        f = getRhs(u[t], xn, yn, r, sigma, kappa, theta, rho)
         u[t + 1, sl, sl] = u[t, sl, sl] + tau * f[sl, sl]
 
         u[t + 1, :, 0]  = u[t + 1, :, 1]
@@ -64,16 +74,16 @@ def solve_runge_kutta(hestonParams : HestonParams,
     sl = slice(1, -1, 1)
     
     for t in range(gridParams.M):
-        k1 = getRhs(u[t], hx, hy, xn, yn, r, sigma, kappa, theta, rho)
+        k1 = getRhs(u[t],xn, yn, r, sigma, kappa, theta, rho)
         k1[:, 0] = k1[ :, 1]
         k1[:, -1] = k1[:, -2]
-        k2 = getRhs(u[t] + 0.5 * tau * k1, hx, hy, xn, yn, r, sigma, kappa, theta, rho)
+        k2 = getRhs(u[t] + 0.5 * tau * k1, xn, yn, r, sigma, kappa, theta, rho)
         k2[:, 0] = k2[:, 1]
         k2[:, -1] = k2[:, -2]
-        k3 = getRhs(u[t] + 0.5 * tau * k2, hx, hy, xn, yn, r, sigma, kappa, theta, rho)
+        k3 = getRhs(u[t] + 0.5 * tau * k2, xn, yn, r, sigma, kappa, theta, rho)
         k3[:, 0] = k3[:, 1]
         k3[:, -1] = k3[:, -2]
-        k4 = getRhs(u[t] + tau * k3, hx, hy, xn, yn, r, sigma, kappa, theta, rho)
+        k4 = getRhs(u[t] + tau * k3, xn, yn, r, sigma, kappa, theta, rho)
         k4[:, 0] = k4[:, 1]
         k4[:, -1] = k4[:, -2]
         
