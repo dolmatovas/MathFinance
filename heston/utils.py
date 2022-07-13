@@ -31,7 +31,7 @@ class GridParams:
 def GetGrid(hestonParams, optionParams, gridParams):
     K = optionParams.K
     F = gridParams.Xfact 
-    eps = 0.01 * K
+    eps = 0.02 * K
     C = K - eps
     n = 2
     a = ((F - 1) * K / C) ** (1/n)
@@ -39,7 +39,7 @@ def GetGrid(hestonParams, optionParams, gridParams):
     tn = np.linspace(-1, a, gridParams.Nx + 1)
     Sn = K + C *  (np.abs(tn) ** n) * np.sign(tn)
 
-    Sn = np.linspace(eps, F, gridParams.Nx + 1)
+    #Sn = np.linspace(eps, F, gridParams.Nx + 1)
     xn = np.log(Sn / optionParams.K) 
     #xn = np.linspace(-X, X, gridParams.Nx + 1)
     
@@ -47,5 +47,9 @@ def GetGrid(hestonParams, optionParams, gridParams):
     hy = Y / (gridParams.Ny - 1)
     yn = np.linspace(-hy / 2.0, Y + hy / 2.0, gridParams.Ny + 1)
 
+    yn = Y * (np.linspace(0, 1, gridParams.Ny + 1) ** 3 )
+
     tn = np.linspace(0, optionParams.T, gridParams.M + 1)
+
+    tn = optionParams.T * (np.linspace(0, 1.0, gridParams.M + 1) ** 1 ) 
     return tn, xn, yn 

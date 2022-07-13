@@ -4,7 +4,7 @@ from numba import jit, njit
 
 from utils import *
 
-#@njit
+@njit
 def getRhs(v, xn, yn, r, sigma, kappa, theta, rho):
     sl = slice(1, -1, 1)
     ux, uy, uxx, uyy, uxy = np.zeros_like(v), np.zeros_like(v), np.zeros_like(v), np.zeros_like(v), np.zeros_like(v)
