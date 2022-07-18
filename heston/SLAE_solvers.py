@@ -2,6 +2,8 @@ import numpy as np
 from numpy.matlib import repmat
 from numba import jit, njit
 
+from derivatives import *
+
 @njit
 def Progonka(A, B, C, F):
     N = len(A)
@@ -20,6 +22,22 @@ def Progonka(A, B, C, F):
     for i in range(N-2, -1, -1):
         X[i] = phi[i] - X[i + 1] * beta[i]
     return X
+
+
+@njit
+def Progonka_coefs(A, B, C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_r, F):
+    
+    frc = gamma_l / B[1]
+    A[0] = alpha_l - C[1] * frc
+    B[0] = beta_l - A[1] * frc
+    F[0] = F[0] - F[1] * frc
+
+    frc = gamma_r / C[-2]
+    A[-1] = alpha_r - B[-2] * frc
+    C[-1] = beta_r - A[-2] * frc
+    F[-1] = F[-1] - F[-2] * frc
+    return Progonka(A, B, C, F)
+
 
 @njit
 def LU(a, b, c):

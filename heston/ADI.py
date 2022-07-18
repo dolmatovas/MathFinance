@@ -6,13 +6,13 @@ from derivatives import GetDerivatives
 def solve_alternating_direction_DO(hestonParams : HestonParams,
                 optionParams: OptionParams,
                 gridParams: GridParams):
-    th = 1.0
+    th = 0.5
 
     r, sigma, kappa, theta, rho = hestonParams.r,hestonParams.sigma, hestonParams.kappa,hestonParams.theta,hestonParams.rho
-    tn, xn, yn = GetGrid(hestonParams, optionParams, gridParams)
-    tau = tn[1] - tn[0]
-    hx = xn[1:] - xn[:-1]
-    hy = yn[1:] - yn[:-1]
+    gridX, gridY, gridT = gridParams.gridX, gridParams.gridY, gridParams.gridT 
+    xn, hx = gridX(gridParams.Nx)
+    yn, hy = gridY(gridParams.Ny)
+    tn = gridT(gridParams.M)
 
     h1 = hx[:-1].reshape(-1, 1)
     h2 = hx[1:].reshape(-1, 1)
@@ -84,13 +84,13 @@ def solve_alternating_direction_DO(hestonParams : HestonParams,
 def solve_alternating_direction_CS(hestonParams : HestonParams,
                 optionParams: OptionParams,
                 gridParams: GridParams):
-    th = 1.0
+    th = 0.5
 
     r, sigma, kappa, theta, rho = hestonParams.r,hestonParams.sigma, hestonParams.kappa,hestonParams.theta,hestonParams.rho
-    tn, xn, yn = GetGrid(hestonParams, optionParams, gridParams)
-    tau = tn[1] - tn[0]
-    hx = xn[1:] - xn[:-1]
-    hy = yn[1:] - yn[:-1]
+    gridX, gridY, gridT = gridParams.gridX, gridParams.gridY, gridParams.gridT 
+    xn, hx = gridX(gridParams.Nx)
+    yn, hy = gridY(gridParams.Ny)
+    tn = gridT(gridParams.M)
 
     h1 = hx[:-1].reshape(-1, 1)
     h2 = hx[1:].reshape(-1, 1)
@@ -188,13 +188,13 @@ def solve_alternating_direction_CS(hestonParams : HestonParams,
 def solve_alternating_direction_MCS(hestonParams : HestonParams,
                 optionParams: OptionParams,
                 gridParams: GridParams):
-    th = 1.0
+    th = 0.5
 
     r, sigma, kappa, theta, rho = hestonParams.r,hestonParams.sigma, hestonParams.kappa,hestonParams.theta,hestonParams.rho
-    tn, xn, yn = GetGrid(hestonParams, optionParams, gridParams)
-    tau = tn[1] - tn[0]
-    hx = xn[1:] - xn[:-1]
-    hy = yn[1:] - yn[:-1]
+    gridX, gridY, gridT = gridParams.gridX, gridParams.gridY, gridParams.gridT 
+    xn, hx = gridX(gridParams.Nx)
+    yn, hy = gridY(gridParams.Ny)
+    tn = gridT(gridParams.M)
 
     h1 = hx[:-1].reshape(-1, 1)
     h2 = hx[1:].reshape(-1, 1)
@@ -253,7 +253,7 @@ def solve_alternating_direction_MCS(hestonParams : HestonParams,
             Fy[sl] = y1[n, sl] - th * tau * Ly[n, sl]
             y2[n, :] = Progonka(Ay, By, Cy, Fy)
         y2[0, :] = 1.0 - np.exp(xn[0])
-
+        y2[-1, :] = 0.0
 
         y2x, y2y , y2xx, y2yy, y2xy = GetDerivatives(y2[:, :], hx, hy)
         y0 = y0 + th * tau * ( y2xy * sigmaxy - Lxy )
