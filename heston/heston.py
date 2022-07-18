@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.stats as sps
 
+from numba import njit
+
 
 def BlackSholes(K, S0, T, r, theta, kappa, v0): 
     sig = np.sqrt(theta)
@@ -24,9 +26,11 @@ def getCD(u, tau, r, k, sig, theta, rho):
         ( r1 * tau - 2 * np.log( ((1 - g * exp)) / (1-g) ) )
     return C, D
 
+
 def getPhi(u, tau, r, k, sig, theta, rho, x, v):
     C, D = getCD(u, tau, r, k, sig, theta, rho)
     return np.exp( C + v * D + 1j * u * x )
+
 
 def getPhiTilda(u, tau, r, k, sig, theta, rho, x, v):
     return getPhi(u - 1j, tau, r, k, sig, theta, rho, x, v) / getPhi(-1j, tau, r, k, sig, theta, rho, x, v)

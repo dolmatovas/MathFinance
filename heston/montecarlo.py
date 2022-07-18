@@ -49,7 +49,7 @@ def generate_path_chi(r, k, sig, theta, rho, x0, v0, tn, Npath):
         
         v_prev = v
         v = c * np.random.noncentral_chisquare(delta, kap, size=Npath)
-        assert all(v >= 0)
+        #assert all(v >= 0)
         
         x += (r - v_prev/2) * tau + \
             rho / sig * (v - v_prev - k * (theta - v_prev) * tau) + \

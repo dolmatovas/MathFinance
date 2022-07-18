@@ -40,6 +40,15 @@ class BaseSolver:
 
         u = np.zeros((Nt + 1, Nx + 1, Ny + 1))
 
+        self.preliminary_step(xmesh, hx, ymesh, hy)
+
+        zrs = np.zeros_like(xmesh)
+        self.problem.mux_ = self.problem.mux(xmesh, ymesh) + zrs
+        self.problem.muy_ = self.problem.muy(xmesh, ymesh) + zrs
+        self.problem.sigmax_ = self.problem.sigmax(xmesh, ymesh) + zrs
+        self.problem.sigmay_ = self.problem.sigmax(xmesh, ymesh) + zrs
+        self.problem.sigmaxy_ = self.problem.sigmaxy(xmesh, ymesh) + zrs
+
         u[0, :, :] = self.problem.init(xmesh, ymesh)
         for it in range(Nt):
             tau = tn[it + 1] - tn[it]
@@ -53,7 +62,7 @@ class BaseSolver:
         assert False, "cannot call step from the base class"
 
 
-    def preliminary_step(self):
+    def preliminary_step(self, *args, **kwargs):
         pass
 
 class Euler(BaseSolver):
@@ -87,8 +96,15 @@ class ADI_Base(BaseSolver):
         super().__init__(*args, **kwargs)
     
 
-    def preliminary_step(self, ):
-        pass
+    def preliminary_step(self, xmesh, hx, ymesh, hy):
+        self.Ax, self.Bx, self.Cx = \
+            self.problem.getSplitCoefsX(xmesh, hx, \
+                                        ymesh, hy, \
+                                        self.der)
+        self.Ay, self.By, self.Cy = \
+            self.problem.getSplitCoefsY(xmesh, hx, \
+                                        ymesh, hy, \
+                                        self.der)
     
 
     def slae_x(self, y0, tau, xn, hx, yn, hy, Lx, Ly):
@@ -101,10 +117,9 @@ class ADI_Base(BaseSolver):
         Fx[0, :] = self.problem.boundary._bxleft.getRhs(yn)
         Fx[-1, :] = self.problem.boundary._bxright.getRhs(yn)
         for m in range(1, Ny): 
-            Ax, Bx, Cx = self.problem.getSplitCoefsX(xn, hx, yn[m], self.der)
-            Ax = 1 - self.th * tau * Ax
-            Bx = -self.th * tau * Bx
-            Cx = -self.th * tau * Cx
+            Ax = 1 - self.th * tau * self.Ax[:, m]
+            Bx = -self.th * tau * self.Bx[:, m]
+            Cx = -self.th * tau * self.Cx[:, m]
             y1[:, m] = Progonka_coefs(Ax, Bx, Cx, \
                         xl, yl, zl, xr, yr, zr, \
                         Fx[:, m])
@@ -122,10 +137,9 @@ class ADI_Base(BaseSolver):
         Fy[:, -1] = self.problem.boundary._byright.getRhs(xn)
         
         for n in range(1, Nx):
-            Ay, By, Cy = self.problem.getSplitCoefsY(xn[n], yn, hy, self.der)
-            Ay = 1 - self.th * tau * Ay
-            By = -self.th * tau * By
-            Cy = -self.th * tau * Cy
+            Ay = 1.0 - self.th * tau * self.Ay[n, :]
+            By = -self.th * tau * self.By[n, :]
+            Cy = -self.th * tau * self.Cy[n, :]
 
             y2[n, :] = Progonka_coefs(Ay, By, Cy, \
                         xl, yl, zl, xr, yr, zr, \

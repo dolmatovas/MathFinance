@@ -10,17 +10,17 @@ def Progonka(A, B, C, F):
     X = np.zeros((N, ))
     
     beta = np.zeros((N, ))
-    phi = np.zeros((N, ))
+    #phi = np.zeros((N, ))
     
     beta[0] = B[0] / A[0]
-    phi[0] = F[0] / A[0]
+    X[0] = F[0] / A[0]
     
     for i in range(1, N):
         beta[i] = B[i] / (A[i] - beta[i - 1] * C[i])
-        phi[i] = (F[i] - C[i] * phi[i - 1]) / (A[i] - beta[i - 1] * C[i])
-    X[-1] = phi[-1]
+        X[i] = (F[i] - C[i] * X[i - 1]) / (A[i] - beta[i - 1] * C[i])
+    #X[-1] = phi[-1]
     for i in range(N-2, -1, -1):
-        X[i] = phi[i] - X[i + 1] * beta[i]
+        X[i] -=  X[i + 1] * beta[i]
     return X
 
 
