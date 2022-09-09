@@ -116,13 +116,21 @@ class ADI_Base(BaseSolver):
         Fx = y0 - self.th * tau * Lx
         Fx[0, :] = self.problem.boundary._bxleft.getRhs(yn)
         Fx[-1, :] = self.problem.boundary._bxright.getRhs(yn)
-        for m in range(1, Ny): 
-            Ax = 1 - self.th * tau * self.Ax[:, m]
-            Bx = -self.th * tau * self.Bx[:, m]
-            Cx = -self.th * tau * self.Cx[:, m]
-            y1[:, m] = Progonka_coefs(Ax, Bx, Cx, \
+        
+        Ax = 1 - self.th * tau * self.Ax[:, 1:-1]
+        Bx = -self.th * tau * self.Bx[:, 1:-1]
+        Cx = -self.th * tau * self.Cx[:, 1:-1]
+        y1[:, 1:-1]  = Progonka_coefs(Ax, Bx, Cx, \
                         xl, yl, zl, xr, yr, zr, \
-                        Fx[:, m])
+                        Fx[:, 1:-1])
+        
+        #for m in range(1, Ny): 
+        #    Ax = 1 - self.th * tau * self.Ax[:, m]
+        #    Bx = -self.th * tau * self.Bx[:, m]
+        #    Cx = -self.th * tau * self.Cx[:, m]
+        #    y1[:, m] = Progonka_coefs(Ax, Bx, Cx, \
+        #                xl, yl, zl, xr, yr, zr, \
+        #                Fx[:, m])
         return y1
     
 
@@ -136,14 +144,23 @@ class ADI_Base(BaseSolver):
         Fy[:, 0] = self.problem.boundary._byleft.getRhs(xn)
         Fy[:, -1] = self.problem.boundary._byright.getRhs(xn)
         
-        for n in range(1, Nx):
-            Ay = 1.0 - self.th * tau * self.Ay[n, :]
-            By = -self.th * tau * self.By[n, :]
-            Cy = -self.th * tau * self.Cy[n, :]
+        Ay = 1.0 - self.th * tau * self.Ay[1:-1, :]
+        By = -self.th * tau * self.By[1:-1, :]
+        Cy = -self.th * tau * self.Cy[1:-1, :]
 
-            y2[n, :] = Progonka_coefs(Ay, By, Cy, \
+        y2[1:-1, :] = Progonka_coefs(Ay.T, By.T, Cy.T, \
                         xl, yl, zl, xr, yr, zr, \
-                        Fy[n, :])
+                        Fy[1:-1, :].T).T
+
+
+        #for n in range(1, Nx):
+        #    Ay = 1.0 - self.th * tau * self.Ay[n, :]
+        #    By = -self.th * tau * self.By[n, :]
+        #    Cy = -self.th * tau * self.Cy[n, :]
+        #
+        #    y2[n, :] = Progonka_coefs(Ay, By, Cy, \
+        #                xl, yl, zl, xr, yr, zr, \
+        #                Fy[n, :])
         return y2
 
 class ADI_DO(ADI_Base):

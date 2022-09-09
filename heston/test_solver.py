@@ -54,7 +54,7 @@ if __name__ == "__main__":
     M = 4
     err = []
     Ms = []
-    for i in range(12):
+    for i in range(10):
         error = get_error(Nx, Ny, M, solver)
         err.append(error)
         Ms.append(M)
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     Ms = np.asarray(Ms)
     p = 2 * np.log( err[:-1] / err[1:] ) / np.log(2)
     print(*p)
-    plot = True
+    plot = False
     if plot:
         plt.loglog(Ms, err, '-ok')
         plt.grid()

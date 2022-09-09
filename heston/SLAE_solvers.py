@@ -6,10 +6,10 @@ from derivatives import *
 
 @njit
 def Progonka(A, B, C, F):
-    N = len(A)
-    X = np.zeros((N, ))
+    N = A.shape[0]
+    X = np.zeros_like(A)
     
-    beta = np.zeros((N, ))
+    beta = np.zeros_like(A)
     #phi = np.zeros((N, ))
     
     beta[0] = B[0] / A[0]
@@ -23,10 +23,34 @@ def Progonka(A, B, C, F):
         X[i] -=  X[i + 1] * beta[i]
     return X
 
+def get_new_coeffs(_A, _B, _C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_r, _F):
+    A = _A.copy()
+    B = _B.copy()
+    C = _C.copy()
+    F = _F.copy()
+
+    frc = gamma_l / B[1]
+
+    A[0] = alpha_l - C[1] * frc
+    B[0] = beta_l - A[1] * frc
+    F[0] = F[0] - F[1] * frc
+
+
+    frc = gamma_r / C[-2]
+    A[-1] = alpha_r - B[-2] * frc
+    C[-1] = beta_r - A[-2] * frc
+    F[-1] = F[-1] - F[-2] * frc
+    return A, B, C, F
 
 @njit
 def Progonka_coefs(A, B, C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_r, F):
-    
+
+    #A = _A.copy()
+    #B = _B.copy()
+    #C = _C.copy()
+    #F = _F.copy()
+
+
     frc = gamma_l / B[1]
     A[0] = alpha_l - C[1] * frc
     B[0] = beta_l - A[1] * frc
@@ -36,6 +60,7 @@ def Progonka_coefs(A, B, C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_r, 
     A[-1] = alpha_r - B[-2] * frc
     C[-1] = beta_r - A[-2] * frc
     F[-1] = F[-1] - F[-2] * frc
+
     return Progonka(A, B, C, F)
 
 
