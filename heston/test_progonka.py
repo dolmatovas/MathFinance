@@ -44,7 +44,7 @@ def test_progonka_coeff():
 def test_n_slae(n=2):
     N = 1000
     
-    a = 2 * np.ones((N, n))
+    a = 3 * np.ones((N, n))
     b = np.random.rand(N, n)
     c = np.random.rand(N, n)
     F = np.ones((N, n))
@@ -63,7 +63,6 @@ def test_n_slae(n=2):
                 F[:, i])
     X = Progonka_coefs(a, b, c, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_r, F)
     err = np.linalg.norm(x - X) / np.linalg.norm(x)
-    print(err)
     assert err < 1e-10
 
 if __name__ == '__main__':

@@ -43,12 +43,12 @@ def get_new_coeffs(_A, _B, _C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_
     return A, B, C, F
 
 @njit
-def Progonka_coefs(A, B, C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_r, F):
+def Progonka_coefs(_A, _B, _C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_r, _F):
 
-    #A = _A.copy()
-    #B = _B.copy()
-    #C = _C.copy()
-    #F = _F.copy()
+    A = _A.copy()
+    B = _B.copy()
+    C = _C.copy()
+    F = _F.copy()
 
 
     frc = gamma_l / B[1]
