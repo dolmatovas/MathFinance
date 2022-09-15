@@ -47,9 +47,6 @@ def GenNonzero(F0, sig, sig0, v, alpha, beta, rho):
     x = 1 - beta
     lam = (F0 ** x / x + rho / alpha * (sig - sig0) ) ** 2 / v
     k = (1 - rho ** 2 * x) / (x * (1 - rho ** 2))
-    Y = np.random.noncentral_chisquare(k, lam, Npaths)
-    F = (x ** 2 * v * Y) ** (1 / (2 * x))
-    #return F, sig
     m = k + lam
     s = np.sqrt(2 * (k + 2 * lam))
 

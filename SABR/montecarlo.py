@@ -3,10 +3,10 @@ from scipy import stats as sps
 
 
 def genAntipath(Npaths):
-    eps = np.random.randn(Npaths // 2)
-    eps = np.r_[eps, -eps]
-    if Npaths % 2:
-        eps = np.r_[eps, np.random.randn(1)]
+    eps = np.random.randn(Npaths)
+    #eps = np.r_[eps, -eps]
+    #if Npaths % 2:
+    #    eps = np.r_[eps, np.random.randn(1)]
     return eps
 
 

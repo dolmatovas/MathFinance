@@ -48,7 +48,7 @@ class BaseSolver:
         self.problem.sigmax_ = self.problem.sigmax(xmesh, ymesh) + zrs
         self.problem.sigmay_ = self.problem.sigmax(xmesh, ymesh) + zrs
         self.problem.sigmaxy_ = self.problem.sigmaxy(xmesh, ymesh) + zrs
-
+        
         u[0, :, :] = self.problem.init(xmesh, ymesh)
         for it in range(Nt):
             tau = tn[it + 1] - tn[it]
