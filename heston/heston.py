@@ -41,7 +41,7 @@ def getMesh(Nu):
     h = tn[1] - tn[0]
     tn = tn[:-1] + h / 2.0
     
-    a = 20
+    a = 30
     n = 1
     f = lambda t: a * (t ** n)
     df = lambda t: a * n * (t ** (n-1))
