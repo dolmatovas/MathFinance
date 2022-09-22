@@ -89,7 +89,7 @@ def getOptionPrice(S, K, Nu, tau, r, k, sig, theta, rho, v, isCall=True):
 
     I1 = np.zeros((Nk, Ns, Nv, 1))
     I2 = np.zeros((Nk, Ns, Nv, 1))
-    for i in range(Nu // batchSize):
+    for i in range(Nu // batchSize + 1):
         start = i * batchSize
         end = start + batchSize
         unbatch = un[:, :, :, start:end]
