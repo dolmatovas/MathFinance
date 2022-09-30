@@ -27,13 +27,13 @@ def getCD(u, tau, r, k, sig, theta, rho):
     return C, D
 
 
-def getPhi(u, tau, r, k, sig, theta, rho, x, v):
+def getPhi(u, tau, r, k, sig, theta, rho, x, v0):
     C, D = getCD(u, tau, r, k, sig, theta, rho)
-    return np.exp( C + v * D + 1j * u * x )
+    return np.exp( C + v0 * D + 1j * u * x )
 
 
-def getPhiTilda(u, tau, r, k, sig, theta, rho, x, v):
-    return getPhi(u - 1j, tau, r, k, sig, theta, rho, x, v) / getPhi(-1j, tau, r, k, sig, theta, rho, x, v)
+def getPhiTilda(u, tau, r, k, sig, theta, rho, x, v0):
+    return getPhi(u - 1j, tau, r, k, sig, theta, rho, x, v0) / getPhi(-1j, tau, r, k, sig, theta, rho, x, v0)
 
 
 def getMesh(Nu):
@@ -59,23 +59,23 @@ def getMesh(Nu):
     hn = np.r_[h1, h2]
     return un, hn
     
-def getOptionPrice(S, K, Nu, tau, r, k, sig, theta, rho, v, isCall=True):
+def getOptionPrice(S, K, Nu, tau, r, k, sig, theta, rho, v0, isCall=True):
     
     if not isinstance(S, np.ndarray):
         S = np.asarray([S])
     if not isinstance(K, np.ndarray):
         K = np.asarray([K])
-    if not isinstance(v, np.ndarray):
-        v = np.asarray([v])
+    if not isinstance(v0, np.ndarray):
+        v0 = np.asarray([v0])
     #dims go as follow:
-    #K S v u
+    #K S v0 u
     S = S.reshape(1, -1, 1, 1)
     K = K.reshape(-1, 1, 1, 1)
-    v = v.reshape(1, 1, -1, 1)
+    v0 = v0.reshape(1, 1, -1, 1)
 
     Ns = S.size
     Nk = K.size
-    Nv = v.size
+    Nv = v0.size
 
     un, hn = getMesh(Nu)
 
@@ -94,8 +94,8 @@ def getOptionPrice(S, K, Nu, tau, r, k, sig, theta, rho, v, isCall=True):
         end = start + batchSize
         unbatch = un[:, :, :, start:end]
         hnbatch = hn[:, :, :, start:end]
-        phi      = getPhi(unbatch, tau, r, k, sig, theta, rho, xn, v)
-        phitilda = getPhiTilda(unbatch, tau, r, k, sig, theta, rho, xn, v)
+        phi      = getPhi(unbatch, tau, r, k, sig, theta, rho, xn, v0)
+        phitilda = getPhiTilda(unbatch, tau, r, k, sig, theta, rho, xn, v0)
 
 
         F1 = np.exp(-1j * unbatch * np.log(K)) * phi / (1j * unbatch)
