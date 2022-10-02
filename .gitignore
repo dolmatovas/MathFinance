@@ -51,6 +51,9 @@ coverage.xml
 .pytest_cache/
 cover/
 
+*.pyc
+*.csv
+
 # Translations
 *.mo
 *.pot
@@ -130,7 +133,7 @@ venv.bak/
 
 # Spyder project settings
 .spyderproject
-.spyproject
+	.spyproject
 
 # Rope project settings
 .ropeproject
