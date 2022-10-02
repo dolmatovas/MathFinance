@@ -60,6 +60,7 @@ def MyAlgorithm(Niter, f, proj, x0):
         x_ = proj(x - dx)
         res_, J_ = f(x_)
         F_ = np.linalg.norm(res_)
+        fs.append(F)
         if F_ < F:
             x, F, res, J = x_, F_, res_, J_
             mu /= nu1
@@ -67,7 +68,7 @@ def MyAlgorithm(Niter, f, proj, x0):
             i -= 1
             mu *= nu2
             continue
-        fs.append(F)
+        
         eps = 1e-10
         if F < eps:
             break

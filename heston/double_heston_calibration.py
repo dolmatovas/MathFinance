@@ -47,7 +47,13 @@ def getOptionPriceABDouble(S, K, Nu, tau, r, heston_params, isCall=True):
 
 def getOptionPriceDerABDouble(S, K, Nu, tau, r, heston_params, isCall=True):
     if not isinstance(K, np.ndarray):
-        K = np.asarray([K])    
+        K = np.asarray([K])
+    if isinstance(tau, np.ndarray):
+        assert len(tau) == len(K)
+        tau = tau.reshape(-1, 1)
+    if isinstance(S, np.ndarray):
+        assert len(S) == len(K)
+        S = S.reshape(-1, 1)    
     K = K.reshape(-1, 1)
 
     Nk = K.size
@@ -72,14 +78,12 @@ def getOptionPriceDerABDouble(S, K, Nu, tau, r, heston_params, isCall=True):
         _phi,  _ders  = getPhiDerAB(un     , tau, **params)
         _phiT, _dersT = getPhiDerAB(un - 1j, tau, **params)
         
-        phi  *= _phi
-        phiT *= _phiT
+        phi  = phi * _phi
+        phiT = phiT * _phiT
         
-        ders  += _ders
-        dersT += _dersT
+        ders  = ders + _ders
+        dersT = dersT + _dersT
 
-        
-        
     F1 = np.exp(1j * un * xn) * phi  / (1j * un)
     F2 = np.exp(1j * un * xn) * phiT / (1j * un)
 
