@@ -9,4 +9,4 @@ Ongoing projects:
 
 3. [Double Heston model calibration](https://github.com/dolmatovas/MathFinance/blob/main/Notebooks/Heston%20Calibration/Double%20Heston%20Calibration.ipynb)
 
-4. [BTC options price surface calibration]()
+4. [BTC options price surface calibration](https://github.com/dolmatovas/MathFinance/blob/main/CryptoOptionsCalibration/Calibration.ipynb)
