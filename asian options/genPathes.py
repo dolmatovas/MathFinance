@@ -18,7 +18,7 @@ def genBrownianMotion(tn, Nsim):
     return W
 
 
-def genGeometricMean(r:float, sig:float, t:float, T:float, St:float, It:float, Nsim:int, nt=100):
+def genGeometricMean(r:float, sig:float, t:float, T:float, St:float, It:float, Nsim:int, nt):
     ''' 
         r, sig -- model parameters
         t -- current time, T -- expiration time
@@ -49,7 +49,7 @@ def genGeometricMean(r:float, sig:float, t:float, T:float, St:float, It:float, N
     return S, G
 
 
-def genArithmeticMean(r:float, sig:float, t:float, T:float, St:float, It:float, Nsim:int, nt=100):
+def genArithmeticMean(r:float, sig:float, t:float, T:float, St:float, It:float, Nsim:int, nt):
     ''' 
         r, sig -- model parameters
         t -- current time, T -- expiration time
@@ -79,7 +79,7 @@ def genArithmeticMean(r:float, sig:float, t:float, T:float, St:float, It:float, 
     return S, A
 
 
-def genMeans(r:float, sig:float, t:float, T:float, St:float, I1:float, I2:float, Nsim:int, nt=100):
+def genMeans(r:float, sig:float, t:float, T:float, St:float, I1:float, I2:float, Nsim:int, nt):
     ''' 
         r, sig -- model parameters
         t -- current time, T -- expiration time
@@ -114,7 +114,7 @@ def genMeans(r:float, sig:float, t:float, T:float, St:float, I1:float, I2:float,
     return S, G, A
 
 
-def genConditionalArithmeticMean(r:float, sig:float, t:float, T:float, St:float, ST:float, It:float, Nsim:int, nt=100):
+def genConditionalArithmeticMean(r:float, sig:float, t:float, T:float, St:float, ST:float, It:float, Nsim:int, nt):
     '''
         r, sig -- model parameters
         t -- current time, T -- expiration time

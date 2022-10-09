@@ -30,10 +30,10 @@ def GeometricMeanMoments(r, sig, t, T, St, It):
     return np.exp( mu + std ** 2 / 2 ), (np.exp(std ** 2) - 1) * np.exp(2 * mu + std ** 2)
 
 
-def MonteCarloGeometricMean(r, sig, t, T, St, It, K, Nsim, moment_matching=False):
+def MonteCarloGeometricMean(r, sig, t, T, St, It, K, Nsim, nt, moment_matching=False):
     if not isinstance(K, np.ndarray):
         K = np.asarray([K])
-    S, G = genGeometricMean(r, sig, t, T, St, It, Nsim)
+    S, G = genGeometricMean(r, sig, t, T, St, It, Nsim, nt)
     
     tau = T - t
 
@@ -48,10 +48,10 @@ def MonteCarloGeometricMean(r, sig, t, T, St, It, K, Nsim, moment_matching=False
     return C
 
 
-def MonteCarloArithmeticMean(r, sig, t, T, St, It, K, Nsim, moment_matching=False):
+def MonteCarloArithmeticMean(r, sig, t, T, St, It, K, Nsim, nt, moment_matching=False):
     if not isinstance(K, np.ndarray):
         K = np.asarray([K])
-    S, A = genArithmeticMean(r, sig, t, T, St, It, Nsim)
+    S, A = genArithmeticMean(r, sig, t, T, St, It, Nsim, nt)
     
     tau = T - t
 
@@ -66,7 +66,7 @@ def MonteCarloArithmeticMean(r, sig, t, T, St, It, K, Nsim, moment_matching=Fals
     return C
 
 
-def MonteCarloArithmeticMeanControlVariate(r, sig, t, T, St, I1, I2, K, Nsim, moment_matching=False):
+def MonteCarloArithmeticMeanControlVariate(r, sig, t, T, St, I1, I2, K, Nsim, nt, moment_matching=False):
     ''' 
         r, sig -- model parameters
         t -- current time, T -- expiration time
@@ -79,7 +79,7 @@ def MonteCarloArithmeticMeanControlVariate(r, sig, t, T, St, I1, I2, K, Nsim, mo
 
     if not isinstance(K, np.ndarray):
         K = np.asarray([K])
-    S, G, A = genMeans(r, sig, t, T, St, I1, I2, Nsim)
+    S, G, A = genMeans(r, sig, t, T, St, I1, I2, Nsim, nt)
 
     tau = T - t
 
