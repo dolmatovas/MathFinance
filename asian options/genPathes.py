@@ -2,14 +2,14 @@ import numpy as np
 from scipy import stats as sps
 
 def genIncrements(nt, Nsim):
-    eps = np.random.randn( nt - 1, Nsim // 2)
+    eps = np.random.randn( nt , Nsim // 2)
     eps = np.c_[eps, -eps]
 
     return eps
 
 
 def genBrownianMotion(tn, Nsim):
-    eps = genIncrements(len(tn), Nsim)
+    eps = genIncrements(len(tn) - 1, Nsim)
 
     eps = eps * np.sqrt( np.diff(tn).reshape(-1, 1) )
     eps = np.r_[np.zeros((1, Nsim)), eps]
@@ -28,24 +28,16 @@ def genGeometricMean(r:float, sig:float, t:float, T:float, St:float, It:float, N
         nt -- number of greed points in time
     '''
 
-    tau = (T - t) / nt
-    
-    X = np.log(St)
-    I = It
-    
-    for i in range(nt):
-        
-        e = np.random.randn(Nsim // 2)
-        e = np.r_[e, -e]
+    tn, ht = np.linspace(t, T, nt + 1, retstep=True)
+    W = genBrownianMotion(tn, Nsim)
 
-        Xnew = X + tau * (r - sig ** 2 / 2) + sig * np.sqrt(tau) * e
-        
-        I += tau * (Xnew + X) / 2
-        X = Xnew
-        
+    X = np.log(St) + (r - sig ** 2 / 2) * (tn - t).reshape(-1, 1) + sig * W
+
+    I = It + ht * np.sum( X[1:-1, :], axis=0 ) + 0.5 * ht * ( X[0, :] + X[-1, :] )
+   
     S = np.exp(X)
     G = np.exp(I / T)
-    
+
     return S, G
 
 
@@ -59,21 +51,12 @@ def genArithmeticMean(r:float, sig:float, t:float, T:float, St:float, It:float, 
         nt -- number of greed points in time
     '''
 
-    tau = (T - t) / nt
-    
-    S = St
-    I = It
-    
-    for i in range(nt):
+    tn, ht = np.linspace(t, T, nt + 1, retstep=True)
+    W = genBrownianMotion(tn, Nsim)
 
-        e = np.random.randn(Nsim // 2)
-        e = np.r_[e, -e]
-        
-        Snew = S * np.exp(tau * (r - sig ** 2 / 2) + sig * np.sqrt(tau) * e)
+    S = St * np.exp( (r - sig ** 2 / 2) * (tn - t).reshape(-1, 1) + sig * W )
 
-        I += tau * (Snew + S) / 2
-        S = Snew
-
+    I = It + ht * np.sum( S[1:-1, :], axis=0 ) + 0.5 * ht * ( S[0, :] + S[-1, :] )
     A = I / T
     
     return S, A
@@ -90,26 +73,17 @@ def genMeans(r:float, sig:float, t:float, T:float, St:float, I1:float, I2:float,
         nt -- number of greed points in time
     '''
 
-    tau = (T - t) / nt
-    
-    X = np.log(St)
-    S = St
-    
-    for i in range(nt):
-        
-        e = np.random.randn(Nsim // 2)
-        e = np.r_[e, -e]
+    tn, ht = np.linspace(t, T, nt + 1, retstep=True)
+    W = genBrownianMotion(tn, Nsim)
 
-        Xnew = X + tau * (r - sig ** 2 / 2) + sig * np.sqrt(tau) * e
-        Snew = np.exp(Xnew)
+    X = np.log(St) + (r - sig ** 2 / 2) * (tn - t).reshape(-1, 1) + sig * W
+    I = I1 + ht * np.sum( X[1:-1, :], axis=0 ) + 0.5 * ht * ( X[0, :] + X[-1, :] )
+    G = np.exp(I / T)
 
-        I1 += tau * (Xnew + X) / 2
-        I2 += tau * (Snew + S) / 2
-        X = Xnew
-        S = Snew
-        
-    G = np.exp(I1 / T)
-    A = I2 / T    
+    S = np.exp(X)
+ 
+    I = I2 + ht * np.sum( S[1:-1, :], axis=0 ) + 0.5 * ht * ( S[0, :] + S[-1, :] )
+    A = I / T   
 
     return S, G, A
 
