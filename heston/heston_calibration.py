@@ -44,7 +44,17 @@ def my_clip(heston_params):
         heston_params[i * 5 : i * 5 + 5] = v0, theta, rho, k, sig
     return heston_params
     
-def MyAlgorithm(Niter, f, proj, x0):
+def MyAlgorithm(Niter:int, f, proj, x0:np.ndarray):
+    ''' 
+    Nonlinear least squares method, Gauss–Newton method
+
+        Niter -- number of iteration
+        f     -- collable, gets vector of model parameters x as input,
+        returns tuple res, J, where res is numpy vector of residues,
+        J is jacobian of residues with respect to x 
+        proj  -- collable, gets vector of model parameters x,
+        returns vector of projected parameters 
+    '''
     x = x0.copy()
 
     mu = 100.0
