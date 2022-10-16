@@ -11,6 +11,7 @@ from heston import getMesh
 
 from typing import Tuple, Union
 
+@njit
 def getPhiAB(u:np.ndarray, tau:float, v0:float, theta:float, rho:float, k:float, sig:float) -> np.ndarray:
     '''
         return Characteristic function of log S_T
@@ -29,7 +30,7 @@ def getPhiAB(u:np.ndarray, tau:float, v0:float, theta:float, rho:float, k:float,
     pred_phi = np.exp(-k * theta * rho * tau * u * 1j / sig - A * v0 + 2 * k * theta / sig ** 2 * D)
     return pred_phi
 
-
+@njit
 def getPhiDerAB(u:np.ndarray, tau:float, v0:float, theta:float, 
                 rho:float, k:float, sig:float)-> Tuple[np.ndarray, np.ndarray]:
     '''
@@ -89,7 +90,7 @@ def getPhiDerAB(u:np.ndarray, tau:float, v0:float, theta:float,
     der5 = k * theta * rho * tau * 1j * u / sig ** 2 - v0 * A_sig - 4 * k * theta / sig**3 * D\
         + 2 * k * theta / sig ** 2 * D_sig
     
-    return phi, np.asarray([der1, der2, der3, der4, der5])
+    return phi, np.stack((der1, der2, der3, der4, der5))
 
 
 def getPhiDerFinite(u, tau, v0, theta, rho, k, sig):
@@ -102,7 +103,7 @@ def getPhiDerFinite(u, tau, v0, theta, rho, k, sig):
     der3 = (getPhiAB(u, tau, v0, theta, rho + eps, k, sig) - getPhiAB(u, tau, v0, theta, rho - eps, k, sig)) * denom 
     der4 = (getPhiAB(u, tau, v0, theta, rho, k + eps, sig) - getPhiAB(u, tau, v0, theta, rho, k - eps, sig)) * denom 
     der5 = (getPhiAB(u, tau, v0, theta, rho, k, sig + eps) - getPhiAB(u, tau, v0, theta, rho, k, sig - eps)) * denom 
-    return pred_phi, np.asarray([der1, der2, der3, der4, der5])
+    return pred_phi, np.stack((der1, der2, der3, der4, der5))
 
 
 def getOptionPriceAB(S:Union[np.ndarray, float], K:Union[np.ndarray, float], tau:Union[np.ndarray, float], 
@@ -253,4 +254,4 @@ def getOptionPriceDerFinite(S, K, tau, Nu, r, v0, theta, rho, k, sig):
     der3 = (getOptionPriceAB(S, K, tau, Nu, r, v0, theta, rho+eps, k, sig) - getOptionPriceAB(S, K, tau, Nu, r, v0, theta, rho-eps, k, sig)) * denom 
     der4 = (getOptionPriceAB(S, K, tau, Nu, r, v0, theta, rho, k+eps, sig) - getOptionPriceAB(S, K, tau, Nu, r, v0, theta, rho, k-eps, sig)) * denom 
     der5 = (getOptionPriceAB(S, K, tau, Nu, r, v0, theta, rho, k, sig+eps) - getOptionPriceAB(S, K, tau, Nu, r, v0, theta, rho, k, sig-eps)) * denom 
-    return C, np.asarray([der1, der2, der3, der4, der5])
+    return C, np.stack([der1, der2, der3, der4, der5])
