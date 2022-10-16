@@ -64,7 +64,7 @@ if __name__ == "__main__":
     Ms = np.asarray(Ms)
     p = 2 * np.log( err[:-1] / err[1:] ) / np.log(2)
     print(*p)
-    plot = False
+    plot = True
     if plot:
         plt.loglog(Ms, err, '-ok')
         plt.grid()

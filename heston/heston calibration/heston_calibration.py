@@ -6,25 +6,25 @@ from numba import njit
 from heston_derivatives import *
 from implied_volatility import *
 
-def getVolatilitySurface(S, Kn, Nu, Tn, r, *heston_params):
+def getVolatilitySurface(S, Kn, Tn, Nu, r, *heston_params):
     Nk = len(Kn)
     Nt = len(Tn)
     C = np.zeros((Nk, Nt))
     IV = np.zeros((Nk, Nt))
     for t, tau in enumerate(Tn):
-        C[:, t] = getOptionPriceAB(S, Kn, Nu, tau, r, *heston_params)
+        C[:, t] = getOptionPriceAB(S, Kn, tau, Nu, r, *heston_params)
         IV[:, t] = getIV(C[:, t], Kn, S, r, tau)
     return C, IV
 
 
-def getResudalAndGrad(C0, S0, Kn, Nu, Tn, r, weights, *heston_params):
+def getResudalAndGrad(C0, S0, Kn, Tn, Nu, r, weights, *heston_params):
     Nt = len(Tn)
     Nk = len(Kn)
     res  = np.zeros((0, ))
     J = np.zeros((5, 0))
     for t in range(Nt):
         w = weights[t]
-        c, ders = getOptionPriceDerAB(S0, Kn, Nu, Tn[t], r, *heston_params)
+        c, ders = getOptionPriceDerAB(S0, Kn, Tn[t], Nu, r, *heston_params)
         ders = np.asarray(ders)
         _res = c.reshape(-1) - C0[:, t].reshape(-1)
         res = np.r_[res, _res * w]
