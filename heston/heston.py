@@ -59,7 +59,7 @@ def getMesh(Nu):
     hn = np.r_[h1, h2]
     return un, hn
     
-def getOptionPrice(S, K, Nu, tau, r, k, sig, theta, rho, v0, isCall=True):
+def getOptionPrice(S, K, tau, Nu, r, k, sig, theta, rho, v0, isCall=True):
     
     if not isinstance(S, np.ndarray):
         S = np.asarray([S])
@@ -117,7 +117,7 @@ def getOptionPrice(S, K, Nu, tau, r, k, sig, theta, rho, v0, isCall=True):
     return res.squeeze()
 
 
-def getOptionPriceFourierSeries(S0, K, Nu, tau, r, k, sig, theta, rho, v):
+def getOptionPriceFourierSeries(S0, K, tau, Nu, r, k, sig, theta, rho, v):
     
     alpha = 2.0
     
