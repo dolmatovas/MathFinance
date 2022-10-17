@@ -39,10 +39,10 @@ if __name__ == "__main__":
     sigmay = lambda x, y: 1.0
     sigmaxy = lambda x, y: 0.0
 
-    Xleft = Neuman(lambda x: 0.0)
-    Xright = Neuman(lambda x: 0.0)
-    Yleft = Neuman(lambda x: 0.0)
-    Yright = Neuman(lambda x: 0.0)
+    Xleft = Neuman(lambda x, t: 0.0)
+    Xright = Neuman(lambda x, t: 0.0)
+    Yleft = Neuman(lambda x, t: 0.0)
+    Yright = Neuman(lambda x, t: 0.0)
 
     boundary = Boundary2D(Xleft, Xright, Yleft, Yright)
     problem = Problem(boundary, init, mux, muy, sigmax, sigmay, sigmaxy)

@@ -6,8 +6,8 @@ class Boundary:
         self._beta = beta
         self._rhs = rhs
     
-    def getRhs(self, x):
-        return self._rhs(x)
+    def getRhs(self, x, t):
+        return self._rhs(x, t)
 
 class Dirichle(Boundary):
     def __init__(self, rhs):
