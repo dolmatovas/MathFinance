@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 class Boundary:
     def __init__(self, alpha, beta, rhs):
         self._alpha = alpha

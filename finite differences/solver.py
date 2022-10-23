@@ -1,10 +1,7 @@
-import numpy as np
-
-from derivatives import *
-from boundary_conditions import * 
-from Problem2d import *
-
-from SLAE_solvers import *
+import numpy as np 
+from problem_2d import Problem
+from derivatives import DerBase
+from slae_solvers import progonka_coefs
 
 class BaseSolver:
     def __init__(self, problem: Problem, der: DerBase, \
@@ -120,7 +117,7 @@ class ADI_Base(BaseSolver):
         Ax = 1 - self.th * tau * self.Ax[:, 1:-1]
         Bx = -self.th * tau * self.Bx[:, 1:-1]
         Cx = -self.th * tau * self.Cx[:, 1:-1]
-        y1[:, 1:-1]  = Progonka_coefs(Ax, Bx, Cx, \
+        y1[:, 1:-1]  = progonka_coefs(Ax, Bx, Cx, \
                         xl, yl, zl, xr, yr, zr, \
                         Fx[:, 1:-1])
         
@@ -148,7 +145,7 @@ class ADI_Base(BaseSolver):
         By = -self.th * tau * self.By[1:-1, :]
         Cy = -self.th * tau * self.Cy[1:-1, :]
 
-        y2[1:-1, :] = Progonka_coefs(Ay.T, By.T, Cy.T, \
+        y2[1:-1, :] = progonka_coefs(Ay.T, By.T, Cy.T, \
                         xl, yl, zl, xr, yr, zr, \
                         Fy[1:-1, :].T).T
 

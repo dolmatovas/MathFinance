@@ -2,10 +2,8 @@ import numpy as np
 from numpy.matlib import repmat
 from numba import jit, njit
 
-from derivatives import *
-
 @njit
-def Progonka(A, B, C, F):
+def progonka(A, B, C, F):
     N = A.shape[0]
     X = np.zeros_like(A)
     
@@ -43,7 +41,7 @@ def get_new_coeffs(_A, _B, _C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_
     return A, B, C, F
 
 @njit
-def Progonka_coefs(_A, _B, _C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_r, _F):
+def progonka_coefs(_A, _B, _C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_r, _F):
 
     A = _A.copy()
     B = _B.copy()
@@ -61,11 +59,11 @@ def Progonka_coefs(_A, _B, _C, alpha_l, beta_l, gamma_l, alpha_r, beta_r, gamma_
     C[-1] = beta_r - A[-2] * frc
     F[-1] = F[-1] - F[-2] * frc
 
-    return Progonka(A, B, C, F)
+    return progonka(A, B, C, F)
 
 
 @njit
-def LU(a, b, c):
+def lu(a, b, c):
     N = len(a)
     l = np.zeros((N, ))
     u = np.zeros((N, ))
@@ -79,7 +77,7 @@ def LU(a, b, c):
 
 
 @njit
-def SolveLU(l, u, v, f):
+def solve_lu(l, u, v, f):
     N = len(l)
     y = np.zeros((N, ))
     x = np.zeros((N, ))

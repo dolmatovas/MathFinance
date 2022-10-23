@@ -1,6 +1,8 @@
 from dataclasses import dataclass
-from boundary_conditions import *
-from derivatives import *
+from boundary_conditions import Boundary2D
+from derivatives import DerBase
+
+import numpy as np
 
 class Problem:
     def __init__(self, boundary: Boundary2D, init, mux, muy, sigmax, sigmay, sigmaxy):

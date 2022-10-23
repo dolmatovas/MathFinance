@@ -1,4 +1,9 @@
-from solver import *
+from solver import ADI_CS, ADI_DO, ADI_HV, ADI_MCS
+from boundary_conditions import Neuman, Dirichle, Boundary2D
+from problem_2d import Problem
+from derivatives import *
+
+import numpy as np
 from matplotlib import pyplot as plt
 
 T = 1.0
@@ -63,7 +68,7 @@ if __name__ == "__main__":
     err = np.asarray(err)
     Ms = np.asarray(Ms)
     p = 2 * np.log( err[:-1] / err[1:] ) / np.log(2)
-    print(*p)
+    print(*p, sep='\n')
     plot = True
     if plot:
         plt.loglog(Ms, err, '-ok')

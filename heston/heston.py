@@ -1,175 +1,72 @@
+from pathlib import Path
+from sys import path
+path.append(str(Path(__file__).parent.resolve()) + '/../')
+
+
+from heston_option_price import heston_option_price
+from black_scholes import implied_volatility
+
+
+from typing import Optional, Union, Tuple, List
 import numpy as np
-import scipy.stats as sps
-
-from numba import njit
 
 
-def BlackSholes(K, S0, T, r, theta, kappa, v0): 
-    sig = np.sqrt(theta)
-    d1 = (np.log(S0 / K) + (r + sig ** 2 / 2) * T) / (np.sqrt(T) * sig)
-    d2 = (np.log(S0 / K) + (r - sig ** 2 / 2) * T) / (np.sqrt(T) * sig)
-    Phi = sps.norm.cdf
-    return S0 * Phi(d1) - np.exp(-r * T) * K * Phi(d2)
+def gen_random_heston_params() -> np.ndarray:
+    """
+        This function gerenate random parameters for heston model
+
+        Returns:
+            heston_params(np.ndarray): generated sabr params
+    """
+    v0 = np.random.rand(1) * 0.015 + 0.01
+    theta = np.random.rand(1) * 0.015 + 0.01
+    
+    rho = -0.9 + (1.8) * np.random.rand(1)
+    k = np.random.rand(1) * 2 + 1.0
+    sig = np.random.rand(1) * 0.002 + 0.01
+    
+    return np.asarray(v0[0], theta[0], rho[0], k[0], sig[0])
 
 
-def getCD(u, tau, r, k, sig, theta, rho): 
-    d = np.sqrt( (sig * rho * u * 1j - k) ** 2 + sig**2 * (1j * u + u ** 2) + 0j)
+class Heston:
+    """ Class for Heston model
     
-    g = (k - rho * sig * 1j * u - d) / (k - rho * sig * 1j * u + d)
-    
-    exp = np.exp(-d * tau)
-    
-    r1 = (k - rho * sig * 1j * u - d)
-    
-    D = 1.0 / (sig**2) * r1 * (1 - exp) / (1 - g * exp)
-    C = r * u * tau * 1j + k * theta / (sig ** 2) * \
-        ( r1 * tau - 2 * np.log( ((1 - g * exp)) / (1-g) ) )
-    return C, D
-
-
-def getPhi(u, tau, r, k, sig, theta, rho, x, v0):
-    C, D = getCD(u, tau, r, k, sig, theta, rho)
-    return np.exp( C + v0 * D + 1j * u * x )
-
-
-def getPhiTilda(u, tau, r, k, sig, theta, rho, x, v0):
-    return getPhi(u - 1j, tau, r, k, sig, theta, rho, x, v0) / getPhi(-1j, tau, r, k, sig, theta, rho, x, v0)
-
-
-def getMesh(Nu):
-    tn = np.linspace(0, 1, (Nu // 2) + 1)
-    h = tn[1] - tn[0]
-    tn = tn[:-1] + h / 2.0
-    
-    a = 30
-    n = 1
-    f = lambda t: a * (t ** n)
-    df = lambda t: a * n * (t ** (n-1))
-    
-    g = lambda t: -np.log(1 - t)
-    dg = lambda t: 1 / (1 - t)
-    
-    u1 = f(tn)
-    h1 = h * df(tn)
-    
-    u2 = a + df(1.0) * g(tn)
-    h2 = h * df(1.0) * dg(tn)
-    
-    un = np.r_[u1, u2]
-    hn = np.r_[h1, h2]
-    return un, hn
-    
-def getOptionPrice(S, K, tau, Nu, r, k, sig, theta, rho, v0, isCall=True):
-    
-    if not isinstance(S, np.ndarray):
-        S = np.asarray([S])
-    if not isinstance(K, np.ndarray):
-        K = np.asarray([K])
-    if not isinstance(v0, np.ndarray):
-        v0 = np.asarray([v0])
-    #dims go as follow:
-    #K S v0 u
-    S = S.reshape(1, -1, 1, 1)
-    K = K.reshape(-1, 1, 1, 1)
-    v0 = v0.reshape(1, 1, -1, 1)
-
-    Ns = S.size
-    Nk = K.size
-    Nv = v0.size
-
-    un, hn = getMesh(Nu)
-
-    un = un.reshape(1, 1, 1, -1)
-    hn = hn.reshape(1, 1, 1, -1)
-    
-    xn = np.log(S).reshape(1, -1, 1, 1)
-    
-
-    batchSize = 100
-
-    I1 = np.zeros((Nk, Ns, Nv, 1))
-    I2 = np.zeros((Nk, Ns, Nv, 1))
-    for i in range(Nu // batchSize + 1):
-        start = i * batchSize
-        end = start + batchSize
-        unbatch = un[:, :, :, start:end]
-        hnbatch = hn[:, :, :, start:end]
-        phi      = getPhi(unbatch, tau, r, k, sig, theta, rho, xn, v0)
-        phitilda = getPhiTilda(unbatch, tau, r, k, sig, theta, rho, xn, v0)
-
-
-        F1 = np.exp(-1j * unbatch * np.log(K)) * phi / (1j * unbatch)
-        F2 = np.exp(-1j * unbatch * np.log(K)) * phitilda / (1j * unbatch)
-
-        F1 = F1.real * hnbatch
-        F2 = F2.real * hnbatch
-        I1 += np.sum(F1, axis=-1, keepdims=True) / np.pi
-        I2 += np.sum(F2, axis=-1, keepdims=True) / np.pi
-    assert I1.shape == (Nk, Ns, Nv, 1)
-    if isCall:
-        P1 = 0.5 + I1
-        P2 = 0.5 + I2
-        res = S * P2 - np.exp(-r * tau) * K * P1
-    else:
-        P1 = 0.5 - I1
-        P2 = 0.5 - I2
-        res = np.exp(-r * tau) * K * P1 - S * P2
-    return res.squeeze()
-
-
-def getOptionPriceFourierSeries(S0, K, tau, Nu, r, k, sig, theta, rho, v):
-    
-    alpha = 2.0
-    
-    U = 20
-    un = np.linspace(0, U, Nu + 1)
-    hu = un[1] - un[0]
-    un = un[:-1] + hu / 2.0
-    
-    hn = hu * np.ones((Nu, ))
-    
-    x = np.log(S0)
-    
-    phi = getPhi(un - (alpha + 1) * 1j, tau, r, k, sig, theta, rho, x, v)
-    psi = phi / (alpha ** 2 + alpha - un**2 + (2 * alpha + 1) * 1j * un)
-    
-    k = np.log(K)
-    
-    I = np.sum( np.exp(-1j * k * un) * psi , axis=-1, keepdims=True)
-    C = np.exp(-r * T - alpha * k) / np.pi * hn * I
-    C = C.real
-    return C.reshape(-1)
-
-
-def getOptionPriceFFT(S0, K, Nu, tau, r, k, sig, theta, rho, v):
-    
-    alpha = 1.0
-    
-    U = 80
-    un = np.linspace(0, U, Nu + 1)
-    hu = un[1] - un[0]
-    un = un[:-1] + hu / 2.0
-    
-    logK = np.pi / hu
-    kn = np.linspace(-logK, logK, Nu + 1).reshape(-1)
-    hk = kn[1] - kn[0]
-    kn = kn[:-1] + hk / 2.0
-    
-    zn = np.exp(-1j * hu * kn)
-    
-    x = np.log(S0)
-    
-    phi = getPhi(un - (alpha + 1) * 1j, tau, r, k, sig, theta, rho, x, v)
-    psi = np.exp(-r * tau) * phi / (alpha ** 2 + alpha - un**2 + (2 * alpha + 1) * 1j * un)
-    
-    psi  = psi.reshape(-1)
-    I = np.sqrt(zn) * np.fft.fft( (-1) ** (np.arange(Nu)) * psi * np.exp(-1j * np.pi  * np.arange(Nu) / Nu) )
-    C = np.exp(-alpha * kn) * hu / np.pi * I
+    Attributes:
+        r(float): interest rate
+        heston_params(np.ndarray): calibrated parameters of the Heston model, heston_params = [v_0, theta, rho, k, sigma]
+    """
+        
+    def __init__(self, heston_params:np.ndarray, interest_rate:float = 0, num_of_integration_points:int = 200):
+        """
+            The __init__ method just saves given parameters.
             
-    C = C.reshape(-1).real
-    Kn = np.exp(kn)
-    i = np.where(Kn >= K[0])[0][0]
-    j = np.where(Kn <= K[-1])[0][-1]
-    
-    
-    return C[i:(j+1)], Kn[i:(j+1)]
+            Args:
+                heston_params(np.ndarray): heston parameters
+                interest_rate(float): risk free interest rate, default value is zero
+        """
+        self.r = interest_rate
+        self.heston_params = heston_params
+        self.num_of_integration_points = num_of_integration_points
+        
+        
+    def __call__(self,K: np.ndarray, 
+                      F: Union[float, np.ndarray], 
+                      T: Union[float, np.ndarray], is_call:bool = True) -> Tuple[ np.ndarray, np.ndarray ]:
+        """
+            Returns option prices and implied volatility for given parameters K, F, T 
+            
+            Args:
+                K(np.ndarray): array of strikes
+                F(float | np.ndarray): underlying futures price
+                T(float, np.ndarray): expiration time
+            Returns:
+                C(np.ndarray): option prices
+                iv(np.ndarray) : implied volatility
+        """
+        S = F * np.exp(-self.r * T)
+        C = heston_option_price(S, K, T, self.num_of_integration_points, self.r, self.heston_params)
+        iv = implied_volatility(C, K, F, T, self.r) 
+        P = C + np.exp(-self.r * T) * (K - F)
+        X = C if is_call else P
+        return X, iv
+
