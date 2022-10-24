@@ -4,7 +4,7 @@ from numba import jit, njit
 from dataclasses import dataclass
 
 @njit
-def GetDerivatives(v, hx, hy):
+def get_derivatives(v, hx, hy):
     sl = slice(1, -1, 1)
 
     h1 = hx[:-1].reshape(-1, 1)
@@ -58,27 +58,27 @@ class DerBase:
     def __init__(self):
         pass
     
-    def DxFwd(self, u, h1, h2):
+    def dx_fwd(self, u, h1, h2):
         ux = np.zeros_like(u)
         sl = slice(1, -1, 1)
         ux[sl, sl] = (u[2:, sl] - u[1:-1, sl]) / h2
         return ux
     
-    def DxBcwd(self, u, h1, h2):
+    def dx_bcwd(self, u, h1, h2):
         ux = np.zeros_like(u)
         sl = slice(1, -1, 1)
         ux[sl, sl] = (u[1:-1, sl] - u[:-2, sl]) / h1
         return ux
 
     
-    def DxCntrl(self, u, h1, h2):
+    def dx_cntrl(self, u, h1, h2):
         ux = np.zeros_like(u)
         sl = slice(1, -1, 1)
-        ux[sl, sl] = (self.DxFwd(u, h1, h2)[sl, sl] * h1 + self.DxBcwd(u, h1, h2)[sl, sl] * h2) \
+        ux[sl, sl] = (self.dx_fwd(u, h1, h2)[sl, sl] * h1 + self.dx_bcwd(u, h1, h2)[sl, sl] * h2) \
                     / ( h1 + h2 )
         return ux
 
-    def DxFwdCoefs(self, h1, h2):
+    def dx_fwd_coefs(self, h1, h2):
         _shape = (h1.size + 2, )
         A, B, C = np.zeros(_shape), np.zeros(_shape), np.zeros(_shape)
 
@@ -86,7 +86,7 @@ class DerBase:
         B[1:-1] = +1.0 / h2
         return A, B, C
 
-    def DxBcwdCoefs(self, h1, h2):
+    def dx_bcwd_coefs(self, h1, h2):
         _shape = (h1.size + 2, )
         A, B, C = np.zeros(_shape), np.zeros(_shape), np.zeros(_shape)
 
@@ -94,7 +94,7 @@ class DerBase:
         C[1:-1] = -1.0 / h1
         return A, B, C
 
-    def DxCntrlCoefs(self, h1, h2):
+    def dx_cntrl_coefs(self, h1, h2):
         _shape = (h1.size + 2, )
         A, B, C = np.zeros(_shape), np.zeros(_shape), np.zeros(_shape)
 
@@ -104,26 +104,26 @@ class DerBase:
         return A, B, C
 
 
-    def DyFwd(self, u, d1, d2):
+    def dy_fwd(self, u, d1, d2):
         uy = np.zeros_like(u)
         sl = slice(1, -1, 1)
         uy[sl, sl] = (u[sl, 2:] - u[sl, 1:-1]) / d2
         return uy
     
-    def DyBcwd(self, u, d1, d2):
+    def dy_bcwd(self, u, d1, d2):
         uy = np.zeros_like(u)
         sl = slice(1, -1, 1)
         uy[sl, sl] = (u[sl, 1:-1] - u[sl, :-2]) / d1
         return uy
     
-    def DyCntrl(self, u, d1, d2):
+    def dy_cntrl(self, u, d1, d2):
         uy = np.zeros_like(u)
         sl = slice(1, -1, 1)
-        uy[sl, sl] = (self.DyFwd(u, d1, d2)[sl, sl] * d1 + self.DyBcwd(u, d1, d2)[sl, sl] * d2) \
+        uy[sl, sl] = (self.dy_fwd(u, d1, d2)[sl, sl] * d1 + self.dy_bcwd(u, d1, d2)[sl, sl] * d2) \
                     / ( d1 + d2 )
         return uy
 
-    def DyFwdCoefs(self, d1, d2):
+    def dy_fwd_coefs(self, d1, d2):
         _shape = (d1.size + 2, )
         A, B, C = np.zeros(_shape), np.zeros(_shape), np.zeros(_shape)
 
@@ -131,7 +131,7 @@ class DerBase:
         B[1:-1] = +1.0 / d2
         return A, B, C
 
-    def DyBcwdCoefs(self, d1, d2):
+    def dy_bcwd_coefs(self, d1, d2):
         _shape = (d1.size + 2, )
         A, B, C = np.zeros(_shape), np.zeros(_shape), np.zeros(_shape)
 
@@ -139,7 +139,7 @@ class DerBase:
         C[1:-1] = -1.0 / d1
         return A, B, C
 
-    def DyCntrlCoefs(self, d1, d2):
+    def dy_cntrl_coefs(self, d1, d2):
         _shape = (d1.size + 2, )
         A, B, C = np.zeros(_shape), np.zeros(_shape), np.zeros(_shape)
 
@@ -149,14 +149,14 @@ class DerBase:
         return A, B, C
 
 
-    def D2x(self, u, h1, h2):
+    def d2x(self, u, h1, h2):
         uxx = np.zeros_like(u)
         sl = slice(1, -1, 1)
-        uxx[sl, sl] = 2.0 * (self.DxFwd(u, h1, h2)[sl, sl] - self.DxBcwd(u, h1, h2)[sl, sl]) \
+        uxx[sl, sl] = 2.0 * (self.dx_fwd(u, h1, h2)[sl, sl] - self.dx_bcwd(u, h1, h2)[sl, sl]) \
                         / (h1 + h2)
         return uxx
 
-    def D2xCoefs(self, h1, h2):
+    def d2x_coefs(self, h1, h2):
         _shape = (h1.size + 2, )
         A, B, C = np.zeros(_shape), np.zeros(_shape), np.zeros(_shape)
 
@@ -165,14 +165,14 @@ class DerBase:
         C[1:-1] = 2.0 / h1 / (h1 + h2)
         return A, B, C 
     
-    def D2y(self, u, d1, d2):
+    def d2y(self, u, d1, d2):
         uyy = np.zeros_like(u)
         sl = slice(1, -1, 1)
-        uyy[sl, sl] = 2.0 * (self.DyFwd(u, d1, d2)[sl, sl] - self.DyBcwd(u, d1, d2)[sl, sl]) / \
+        uyy[sl, sl] = 2.0 * (self.dy_fwd(u, d1, d2)[sl, sl] - self.dy_bcwd(u, d1, d2)[sl, sl]) / \
                         (d1 + d2)
         return uyy
     
-    def D2yCoefs(self, d1, d2):
+    def d2y_coefs(self, d1, d2):
         _shape = (d1.size + 2, )
         A, B, C = np.zeros(_shape), np.zeros(_shape), np.zeros(_shape)
 
@@ -181,7 +181,7 @@ class DerBase:
         C[1:-1] = 2.0 / d1 / (d1 + d2)
         return A, B, C 
     
-    def Dxy(self, u, h1, h2, d1, d2):
+    def dxy(self, u, h1, h2, d1, d2):
         uxy = np.zeros_like(u)
         sl = slice(1, -1, 1)
         uxfwd = np.zeros_like(u)
@@ -194,47 +194,77 @@ class DerBase:
         uxbwd[1:, :]  = (u[1:] - u[:-1]) / hx
 
         uxctr[sl, :] = ( h1 * uxfwd[sl, :] + h2 * uxbwd[sl, :] ) / (h1 + h2)
-        return self.DyCntrl(uxctr, d1, d2)
+        return self.dy_cntrl(uxctr, d1, d2)
 
 
 class DerCntrl(DerBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.Dx = self.DxCntrl
-        self.Dy = self.DyCntrl
+        self.dx = self.dx_cntrl
+        self.dy = self.dy_cntrl
 
-        self.DxCoefs = self.DxCntrlCoefs
-        self.DyCoefs = self.DyCntrlCoefs
+        self.dx_coefs = self.dx_cntrl_coefs
+        self.dy_coefs = self.dy_cntrl_coefs
 
     
 class DerFwdX(DerBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.Dx = self.DxFwd
-        self.Dy = self.DyCntrl
+        self.dx = self.dx_fwd
+        self.dy = self.dy_cntrl
 
-        self.DxCoefs = self.DxFwdCoefs
-        self.DyCoefs = self.DyCntrlCoefs
+        self.dx_coefs = self.dx_fwd_coefs
+        self.dy_coefs = self.dy_cntrl_coefs
 
 class DerFwdY(DerBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.Dx = self.DxCntrl
-        self.Dy = self.DyFwd
+        self.dx = self.dx_cntrl
+        self.dy = self.dy_fwd
 
-        self.DxCoefs = self.DxCntrlCoefs
-        self.DyCoefs = self.DyFwdCoefs
+        self.dx_coefs = self.dx_cntrl_coefs
+        self.dy_coefs = self.dy_fwd_coefs
 
     
 class DerFwdXY(DerBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.Dx = self.DxFwd
-        self.Dy = self.DyFwd
+        self.dx = self.dx_fwd
+        self.dy = self.dy_fwd
 
-        self.DxCoefs = self.DxFwdCoefs
-        self.DyCoefs = self.DyFwdCoefs
+        self.dx_coefs = self.dx_fwd_coefs
+        self.dy_coefs = self.dy_fwd_coefs
+
+
+class DerFwdBcwdX(DerBase):
+    def __init__(self, split_index : int = None):
+        super().__init__()
+        self.split_index = split_index
+        self.dy = self.dy_fwd
+        self.dy_coefs = self.dy_fwd_coefs
+
+
+    def dx(self, u, h1, h2):
+        i = self.split_index
+        if self.split_index is None:
+            i = len(h1) // 2            
+        fwd = self.dx_fwd(u, h1, h2)
+        res = self.dx_bcwd(u, h1, h2)
+        res[i:] = fwd[i:]
+        return res
+
+    
+    def dx_coefs(self, h1, h2):
+        i = self.split_index
+        if self.split_index is None:
+            i = len(h1) // 2
+        A_fwd, B_fwd, C_fwd = self.dx_fwd_coefs(h1, h2)
+        A, B, C = self.dx_bcwd_coefs(h1, h2)
+        A[i:] = A_fwd[i:]
+        B[i:] = B_fwd[i:]
+        C[i:] = C_fwd[i:]
+        return A, B, C

@@ -1,10 +1,34 @@
+from typing import Tuple, Union, Callable
+import numpy as np
+
 class Boundary:
-    def __init__(self, alpha, beta, rhs):
+    '''
+        This class stores boundary conditions of the third type:
+        alpha u' + beta u = rhs
+    '''
+    def __init__(self, alpha:float, beta:float, rhs:Callable[ [ np.ndarray, float ] , np.ndarray ]):
+        '''
+            Init method just saves coefficients and rhs
+
+            Args:
+                alpha(float) : alpha
+                beta(float): beta
+                rhs(Callable[ [ np.ndarray, float ] , np.ndarray ]) : right hand side. 
+                The first argument is spatial variable, the second argument is time.
+        '''
         self._alpha = alpha
         self._beta = beta
         self._rhs = rhs
     
-    def getRhs(self, x, t):
+    def get_rhs(self, x:np.ndarray, t:float):
+        '''
+            get_rhs method evaluates right hand side
+
+            Args:
+                x(np.ndarray): spatial variabple
+                t(float): time
+
+        '''
         return self._rhs(x, t)
 
 class Dirichle(Boundary):
@@ -17,16 +41,41 @@ class Neuman(Boundary):
         super().__init__(1.0, 0.0, rhs)
 
 
-def getCoefsLeft(border, h1, h2):
-    alpha = border._alpha
-    beta = border._beta
+def get_coefs_left(boundary: Boundary, h1 : float, h2 : float) -> Tuple[float,float,float]:
+    '''
+        alpha u'_0 + beta u_0 = x u_0 + y u_1 + z u_2
+
+        Args:
+            boundary(Boundary): boundary
+            h1(float) -- grid step
+            h2(float) -- grid step
+        Returns:
+            x(float):
+            y(float):
+            z(float):
+    ''' 
+    
+    alpha = boundary._alpha
+    beta = boundary._beta
     x = alpha * (-2.0 * h1 - h2 ) / (h1 * (h1 + h2)) + beta
     y = alpha * (h1 + h2) / (h1 * h2)
     z = alpha * (-h1 / ((h1 + h2) * h2) )
     return x, y, z
 
 
-def getCoefsRight(border, hm1, hm2):
+def get_coefs_right(border, hm1, hm2):
+    '''
+        alpha u'_N + beta u_N = x u_N + y u_{N-1} + z u_{N-2}
+
+        Args:
+            boundary(Boundary): boundary
+            hm1(float) -- grid step
+            hm2(float) -- grid step
+        Returns:
+            x(float):
+            y(float):
+            z(float):
+    ''' 
     alpha = border._alpha
     beta = border._beta
     x = alpha * (2.0 * hm1 + hm2 ) / (hm1 * (hm1 + hm2)) + beta
@@ -42,13 +91,13 @@ class Boundary2D:
         self._byleft = byleft
         self._byright = byright
     
-    def getCoefsX(self, h1, h2, hm2, hm1):
+    def get_coefs_x(self, h1, h2, hm2, hm1):
         '''
-        alpha_l u'_0 + beta_l u_0 = xl u_0 + yl u_1 + zl u_2
-        alpha_r u'_N + beta_r u_N = xr u_{N} + yr u_{N - 1} + zr u_{N - 2} 
+            alpha_l u'_0 + beta_l u_0 = xl u_0 + yl u_1 + zl u_2
+            alpha_r u'_N + beta_r u_N = xr u_{N} + yr u_{N - 1} + zr u_{N - 2} 
         '''
-        return getCoefsLeft(self._bxleft, h1, h2) + getCoefsRight(self._bxright, hm1, hm2)
+        return get_coefs_left(self._bxleft, h1, h2) + get_coefs_right(self._bxright, hm1, hm2)
     
-    def getCoefsY(self, d1, d2, dm2, dm1):
-        return getCoefsLeft(self._byleft, d1, d2) + getCoefsRight(self._byright, dm1, dm2)
+    def get_coefs_y(self, d1, d2, dm2, dm1):
+        return get_coefs_left(self._byleft, d1, d2) + get_coefs_right(self._byright, dm1, dm2)
         

@@ -15,17 +15,17 @@ class Problem:
 
         self.init = init
 
-    def getSplit(self, u, xmesh, hx, ymesh, hy, der:DerBase):
+    def get_split(self, u, xmesh, hx, ymesh, hy, der:DerBase):
         h1 = hx[:-1].reshape(-1, 1)
         h2 = hx[1:].reshape(-1, 1)
         d1 = hy[:-1].reshape(1, -1)
         d2 = hy[1:].reshape(1, -1)
 
-        ux = der.Dx(u, h1, h2)
-        uy = der.Dy(u, d1, d2)
-        uxx = der.D2x(u, h1, h2)
-        uyy = der.D2y(u, d1, d2)
-        uxy = der.Dxy(u, h1, h2, d1, d2)
+        ux = der.dx(u, h1, h2)
+        uy = der.dy(u, d1, d2)
+        uxx = der.d2x(u, h1, h2)
+        uyy = der.d2y(u, d1, d2)
+        uxy = der.dxy(u, h1, h2, d1, d2)
         
         Lx = np.zeros_like(u)
         Ly = np.zeros_like(u)
@@ -44,17 +44,17 @@ class Problem:
 
         return Lx, Ly, Lxy
 
-    def getRhs(self, u, xmesh, hx, ymesh, hy, der:DerBase):
-        Lx, Ly, Lxy = self.getSplit(u, xmesh, hx, ymesh, hy, der)
+    def get_rhs(self, u, xmesh, hx, ymesh, hy, der:DerBase):
+        Lx, Ly, Lxy = self.get_split(u, xmesh, hx, ymesh, hy, der)
         return Lx + Ly + Lxy
 
 
-    def getSplitCoefsX(self, xmesh, hx, ymesh, hy, der:DerBase):
+    def get_split_coefs_x(self, xmesh, hx, ymesh, hy, der:DerBase):
         h1 = hx[:-1]#.reshape(-1, 1)
         h2 = hx[1:]#.reshape(-1, 1)
 
-        Ax, Bx, Cx = der.DxCoefs(h1, h2)
-        Axx, Bxx, Cxx = der.D2xCoefs(h1, h2)
+        Ax, Bx, Cx = der.dx_coefs(h1, h2)
+        Axx, Bxx, Cxx = der.d2x_coefs(h1, h2)
         mux = self.mux(xmesh, ymesh) + np.zeros_like(xmesh)
         sigmax = self.sigmax(xmesh, ymesh) + np.zeros_like(xmesh)
 
@@ -64,12 +64,12 @@ class Problem:
         return Ax, Bx, Cx
 
 
-    def getSplitCoefsY(self, xmesh, hx, ymesh, hy, der:DerBase):
+    def get_split_coefs_y(self, xmesh, hx, ymesh, hy, der:DerBase):
         d1 = hy[:-1]#.reshape(1, -1)
         d2 = hy[1:]#.reshape(1, -1)
 
-        Ay, By, Cy = der.DyCoefs(d1, d2)
-        Ayy, Byy, Cyy = der.D2yCoefs(d1, d2)
+        Ay, By, Cy = der.dy_coefs(d1, d2)
+        Ayy, Byy, Cyy = der.d2y_coefs(d1, d2)
         muy = self.muy(xmesh, ymesh) + np.zeros_like(xmesh)
         sigmay = self.sigmay(xmesh, ymesh) + np.zeros_like(xmesh)
 

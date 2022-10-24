@@ -15,15 +15,15 @@ class BaseSolver:
     def restore_boundary(self, u, xn, hx, yn, hy, t):
 
 
-        xl, yl, zl, xr, yr, zr = self.problem.boundary.getCoefsX(hx[0], hx[1], hx[-2], hx[-1])
-        fl = self.problem.boundary._bxleft.getRhs(yn, t)
-        fr = self.problem.boundary._bxright.getRhs(yn, t)
+        xl, yl, zl, xr, yr, zr = self.problem.boundary.get_coefs_x(hx[0], hx[1], hx[-2], hx[-1])
+        fl = self.problem.boundary._bxleft.get_rhs(yn, t)
+        fr = self.problem.boundary._bxright.get_rhs(yn, t)
         u[0, :] = (fl - yl * u[1, :] - zl * u[2, :]) / xl
         u[-1, :] = (fr - yr * u[-2, :] - zr * u[-3, :]) / xr
 
-        fl = self.problem.boundary._byleft.getRhs(xn, t)
-        fr = self.problem.boundary._byright.getRhs(xn, t)
-        xl, yl, zl, xr, yr, zr = self.problem.boundary.getCoefsY(hy[0], hy[1], hy[-2], hy[-1])
+        fl = self.problem.boundary._byleft.get_rhs(xn, t)
+        fr = self.problem.boundary._byright.get_rhs(xn, t)
+        xl, yl, zl, xr, yr, zr = self.problem.boundary.get_coefs_y(hy[0], hy[1], hy[-2], hy[-1])
         u[:, 0] = (fl - yl * u[:, 1] - zl * u[:, 2]) / xl
         u[:, -1] = (fr - yr * u[:, -2] - zr * u[:, -3]) / xr        
         return u
@@ -62,13 +62,14 @@ class BaseSolver:
     def preliminary_step(self, *args, **kwargs):
         pass
 
+
 class Euler(BaseSolver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
-    def step(self, u, tau, xmesh, hx, ymesh, hy):   
-        rhs =  self.problem.getRhs(u, xmesh, hx, ymesh, hy, self.der)
+    def step(self, u, t, tau, xmesh, hx, ymesh, hy):   
+        rhs =  self.problem.get_rhs(u, xmesh, hx, ymesh, hy, self.der)
         return u + tau * rhs
 
 
@@ -76,11 +77,11 @@ class RungeCutta(BaseSolver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def step(self, u, tau, xmesh, hx, ymesh, hy):
-        k1 = self.problem.getRhs(u, xmesh, hx, ymesh, hy, self.der)
-        k2 = self.problem.getRhs(u + 0.5 * tau * k1, xmesh, hx, ymesh, hy, self.der)
-        k3 = self.problem.getRhs(u + 0.5 * tau * k2, xmesh, hx, ymesh, hy, self.der)
-        k4 = self.problem.getRhs(u + tau * k3, xmesh, hx, ymesh, hy, self.der)
+    def step(self, u, t, tau, xmesh, hx, ymesh, hy):
+        k1 = self.problem.get_rhs(u, xmesh, hx, ymesh, hy, self.der)
+        k2 = self.problem.get_rhs(u + 0.5 * tau * k1, xmesh, hx, ymesh, hy, self.der)
+        k3 = self.problem.get_rhs(u + 0.5 * tau * k2, xmesh, hx, ymesh, hy, self.der)
+        k4 = self.problem.get_rhs(u + tau * k3, xmesh, hx, ymesh, hy, self.der)
         return u + tau / 6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
 
 
@@ -95,11 +96,11 @@ class ADI_Base(BaseSolver):
 
     def preliminary_step(self, xmesh, hx, ymesh, hy):
         self.Ax, self.Bx, self.Cx = \
-            self.problem.getSplitCoefsX(xmesh, hx, \
+            self.problem.get_split_coefs_x(xmesh, hx, \
                                         ymesh, hy, \
                                         self.der)
         self.Ay, self.By, self.Cy = \
-            self.problem.getSplitCoefsY(xmesh, hx, \
+            self.problem.get_split_coefs_x(xmesh, hx, \
                                         ymesh, hy, \
                                         self.der)
     
@@ -108,11 +109,11 @@ class ADI_Base(BaseSolver):
         Ny = yn.size - 1 
         y1 = np.zeros_like(y0)
 
-        xl, yl, zl, xr, yr, zr = self.problem.boundary.getCoefsX(hx[0], hx[1], hx[-2], hx[-1])
+        xl, yl, zl, xr, yr, zr = self.problem.boundary.get_coefs_x(hx[0], hx[1], hx[-2], hx[-1])
 
         Fx = y0 - self.th * tau * Lx
-        Fx[0, :] = self.problem.boundary._bxleft.getRhs(yn, t)
-        Fx[-1, :] = self.problem.boundary._bxright.getRhs(yn, t)
+        Fx[0, :] = self.problem.boundary._bxleft.get_rhs(yn, t)
+        Fx[-1, :] = self.problem.boundary._bxright.get_rhs(yn, t)
         
         Ax = 1 - self.th * tau * self.Ax[:, 1:-1]
         Bx = -self.th * tau * self.Bx[:, 1:-1]
@@ -135,11 +136,11 @@ class ADI_Base(BaseSolver):
         Nx = xn.size - 1
         y2 = np.zeros_like(y1)
 
-        xl, yl, zl, xr, yr, zr = self.problem.boundary.getCoefsY(hy[0], hy[1], hy[-2], hy[-1])    
+        xl, yl, zl, xr, yr, zr = self.problem.boundary.get_coefs_y(hy[0], hy[1], hy[-2], hy[-1])    
         
         Fy = y1 - self.th * tau * Ly
-        Fy[:, 0] = self.problem.boundary._byleft.getRhs(xn, t)
-        Fy[:, -1] = self.problem.boundary._byright.getRhs(xn, t)
+        Fy[:, 0] = self.problem.boundary._byleft.get_rhs(xn, t)
+        Fy[:, -1] = self.problem.boundary._byright.get_rhs(xn, t)
         
         Ay = 1.0 - self.th * tau * self.Ay[1:-1, :]
         By = -self.th * tau * self.By[1:-1, :]
@@ -171,14 +172,16 @@ class ADI_DO(ADI_Base):
         yn = ymesh[0, :]
 
         #first step
-        Lx, Ly, Lxy = self.problem.getSplit(u, xmesh, hx, ymesh, hy, self.der)
+        Lx, Ly, Lxy = self.problem.get_split(u, xmesh, hx, ymesh, hy, self.der)
         
         y0 = u + tau * (  Lx + Ly + Lxy )
 
-        y1 = self.slae_x(y0, t, tau, xn, hx, yn, hy, Lx, Ly)
+        y0 = self.restore_boundary(y0, xn, hx, yn, hy, t + tau / 2)
+
+        y1 = self.slae_x(y0, t + tau / 2, tau, xn, hx, yn, hy, Lx, Ly)
                 
-        y2 = self.slae_y(y1, t, tau, xn, hx, yn, hy, Lx, Ly)
-        return y2
+        u = self.slae_y(y1, t, tau, xn, hx, yn, hy, Lx, Ly)
+        return u
 
 
 class ADI_CS(ADI_Base):
@@ -192,17 +195,19 @@ class ADI_CS(ADI_Base):
         yn = ymesh[0, :]
 
         #first stage
-        Lx, Ly, Lxy = self.problem.getSplit(u, xmesh, hx, ymesh, hy, self.der)
+        Lx, Ly, Lxy = self.problem.get_split(u, xmesh, hx, ymesh, hy, self.der)
         y0 = u + tau * (  Lx + Ly + Lxy )
-        y1 = self.slae_x(y0, t, tau, xn, hx, yn, hy, Lx, Ly)
-        y2 = self.slae_y(y1, t, tau, xn, hx, yn, hy, Lx, Ly)
+        y0 = self.restore_boundary(y0, xn, hx, yn, hy, t + tau / 2)
+        y1 = self.slae_x(y0, t + tau/2, tau, xn, hx, yn, hy, Lx, Ly)
+        y2 = self.slae_y(y1, t + tau/2, tau, xn, hx, yn, hy, Lx, Ly)
 
         #second stage
-        _, _, _Lxy = self.problem.getSplit(y2, xmesh, hx, ymesh, hy, self.der)
+        _, _, _Lxy = self.problem.get_split(y2, xmesh, hx, ymesh, hy, self.der)
         y0 = y0 + 0.5 * tau * ( _Lxy - Lxy )
-        y1 = self.slae_x(y0, t, tau, xn, hx, yn, hy, Lx, Ly)
-        y2 = self.slae_y(y1, t, tau, xn, hx, yn, hy, Lx, Ly)
-        return y2
+        y0 = self.restore_boundary(y0, xn, hx, yn, hy, t + tau / 2)
+        y1 = self.slae_x(y0, t + tau/2, tau, xn, hx, yn, hy, Lx, Ly)
+        u = self.slae_y(y1, t + tau, tau, xn, hx, yn, hy, Lx, Ly)
+        return u
 
 
 class ADI_MCS(ADI_Base):
@@ -215,17 +220,19 @@ class ADI_MCS(ADI_Base):
         xn = xmesh[:, 0]
         yn = ymesh[0, :]
         #first stage
-        Lx, Ly, Lxy = self.problem.getSplit(u, xmesh, hx, ymesh, hy, self.der)
+        Lx, Ly, Lxy = self.problem.get_split(u, xmesh, hx, ymesh, hy, self.der)
         y0 = u + tau * (  Lx + Ly + Lxy )
+        y0 = self.restore_boundary(y0, xn, hx, yn, hy, t + tau / 2)
         y1 = self.slae_x(y0, t, tau, xn, hx, yn, hy, Lx, Ly)
         y2 = self.slae_y(y1, t, tau, xn, hx, yn, hy, Lx, Ly)
         #second stage
-        _Lx, _Ly, _Lxy = self.problem.getSplit(y2, xmesh, hx, ymesh, hy, self.der)
+        _Lx, _Ly, _Lxy = self.problem.get_split(y2, xmesh, hx, ymesh, hy, self.der)
         y0 = y0 + 0.5 * tau * ( _Lxy - Lxy )
         y0 = y0 + (0.5 - self.th) * tau * (_Lx + _Ly + _Lxy - Lx - Ly - Lxy)
+        y0 = self.restore_boundary(y0, xn, hx, yn, hy, t + tau / 2)
         #third stage
-        y1 = self.slae_x(y0, t, tau, xn, hx, yn, hy, Lx, Ly)
-        y2 = self.slae_y(y1, t, tau, xn, hx, yn, hy, Lx, Ly)
+        y1 = self.slae_x(y0, t + tau/2, tau, xn, hx, yn, hy, Lx, Ly)
+        y2 = self.slae_y(y1, t + tau, tau, xn, hx, yn, hy, Lx, Ly)
         return y2
 
 class ADI_HV(ADI_Base):
@@ -238,13 +245,13 @@ class ADI_HV(ADI_Base):
         xn = xmesh[:, 0]
         yn = ymesh[0, :]
         #first stage
-        Lx, Ly, Lxy = self.problem.getSplit(u, xmesh, hx, ymesh, hy, self.der)
+        Lx, Ly, Lxy = self.problem.get_split(u, xmesh, hx, ymesh, hy, self.der)
         y0 = u + tau * (  Lx + Ly + Lxy )
         y1 = self.slae_x(y0, t, tau, xn, hx, yn, hy, Lx, Ly)
         y2 = self.slae_y(y1, t, tau, xn, hx, yn, hy, Lx, Ly)
         #second stage
         y2 = self.restore_boundary(y2, xn, hx, yn, hy, t)
-        _Lx, _Ly, _Lxy = self.problem.getSplit(y2, xmesh, hx, ymesh, hy, self.der)
+        _Lx, _Ly, _Lxy = self.problem.get_split(y2, xmesh, hx, ymesh, hy, self.der)
         y0 = y0 + 0.5 * tau * (_Lx + _Ly + _Lxy - Lx - Ly - Lxy)
         #third stage
         y1 = self.slae_x(y0, t, tau, xn, hx, yn, hy, _Lx, _Ly)

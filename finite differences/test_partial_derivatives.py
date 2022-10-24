@@ -22,11 +22,11 @@ def get_error(N, der, f, fx, fy, fxx, fyy, fxy, xi, dxi=None):
     
     
     u = f(xn, yn)
-    ux = der.Dx(u, h1, h2)
-    uy = der.Dy(u, d1, d2)
-    uxx = der.D2x(u, h1, h2)
-    uyy = der.D2y(u, d1, d2)
-    uxy = der.Dxy(u, h1, h2, d1, d2)
+    ux = der.dx(u, h1, h2)
+    uy = der.dy(u, d1, d2)
+    uxx = der.d2x(u, h1, h2)
+    uyy = der.d2y(u, d1, d2)
+    uxy = der.dxy(u, h1, h2, d1, d2)
     
     ux_, uy_, uxx_, uyy_, uxy_ = np.zeros_like(u), \
                     np.zeros_like(u), \
